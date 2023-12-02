@@ -30,7 +30,7 @@ static char *read_text_file(const char *path) {
 
     void *file_memory = malloc(file_size + 1);
     if (!file_memory) {
-        fprintf(stderr, "Failed to allocate memory when reading text file\n");
+        fprintf(stderr, "Failed to allocate memory for text file\n");
         fclose(file);
         return 0;
     }
@@ -97,8 +97,6 @@ int main(int argc, char **argv) {
                     last_digit_seen = true;
                 }
             } else {
-                // If a digit word starts with this character, we'll try to match
-
                 for (int i = 0; i < array_count(digit_words); i++) {
                     if (strings_overlap(at, (char *)(digit_words[i]))) {
                         int digit = i + 1;
