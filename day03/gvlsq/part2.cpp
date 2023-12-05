@@ -5,18 +5,6 @@
 
 #define array_count(a) (sizeof((a)) / sizeof((a)[0]))
 
-static const char *example_input =
-"467..114..\n"
-"...*......\n"
-"..35..633.\n"
-"......#...\n"
-"617*......\n"
-".....+.58.\n"
-"..592.....\n"
-"......755.\n"
-"...$.*....\n"
-".664.598..\n";
-
 struct Vector2i {
     int x;
     int y;
@@ -101,11 +89,9 @@ static inline int get_length(int i) {
 
     if (i < 10) {
         result = 1;
-    }
-    else if (i < 100) {
+    } else if (i < 100) {
         result = 2;
-    }
-    else if (i < 1000) {
+    } else if (i < 1000) {
         result = 3;
     }
 
