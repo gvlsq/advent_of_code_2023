@@ -5,6 +5,21 @@
 
 #define array_count(a) (sizeof((a)) / sizeof((a)[0]))
 
+static char card_labels[] = {
+    'A',
+    'K',
+    'Q',
+    'T',
+    '9',
+    '8',
+    '7',
+    '6',
+    '5',
+    '4',
+    '3',
+    '2',
+};
+
 enum Hand_Type {
     HAND_TYPE_HIGH_CARD,
     HAND_TYPE_ONE_PAIR,
@@ -16,7 +31,7 @@ enum Hand_Type {
     HAND_TYPE_COUNT,
 };
 struct Hand {
-    char *cards;
+    char cards[5 + 1];
     int bid;
 };
 
@@ -25,8 +40,15 @@ struct Card_Group {
     int count;
 };
 
+struct Hand_Stack {
+    int depth;
+    Hand hands[1 << 8];
+};
+
 static int hand_count;
 static Hand hands[1 << 10];
+
+static Hand_Stack hand_stack;
 
 static char *read_text_file(const char *path) {
     FILE *file = fopen(path, "r");
@@ -65,13 +87,13 @@ static void preprocess_input(char *input) {
 
     int chars_read;
 
-    char tmp0[128];
+    char tmp0[5 + 1];
     int tmp1;
     while (sscanf(at, "%s %d\n%n", &tmp0, &tmp1, &chars_read) == 2) {
         assert(hand_count < array_count(hands));
 
         Hand *hand = &hands[hand_count++];
-        hand->cards = duplicate_string(tmp0);
+        memcpy(hand->cards, tmp0, 5);
         hand->bid = tmp1;
 
         at += chars_read;
@@ -82,6 +104,29 @@ static inline int string_length(char *s) {
     int result = strlen(s);
 
     return result;
+}
+
+static inline int index_of(char *s, char c) {
+    int result = -1;
+
+    for (int i = 0; i < string_length(s); i++) {
+        if (s[i] == c) {
+            result = i;
+            break;
+        }
+    }
+
+    return result;
+}
+
+static void push_hand(Hand_Stack *stack, Hand hand) {
+    assert(stack->depth < array_count(stack->hands));
+    stack->hands[stack->depth++] = hand;
+}
+
+static Hand pop_hand(Hand_Stack *stack) {
+    assert(stack->depth > 0);
+    return stack->hands[--stack->depth];
 }
 
 static inline Card_Group *find_group(Card_Group *groups, int group_count, char label) {
@@ -173,29 +218,48 @@ static inline bool is_one_pair(Card_Group *groups, int group_count) {
 }
 
 static Hand_Type compute_hand_type(Hand *hand) {
-    Hand_Type result = {};
+    Hand_Type best_type = {};
 
-    int card_group_count = 0;
-    Card_Group card_groups[5];
-    group_by_card_label(hand, card_groups, &card_group_count);
+    push_hand(&hand_stack, *hand);
 
-    if (is_five_of_a_kind(card_groups, card_group_count)) {
-        result = HAND_TYPE_FIVE_OF_A_KIND;
-    } else if (is_four_of_a_kind(card_groups, card_group_count)) {
-        result = HAND_TYPE_FOUR_OF_A_KIND;
-    } else if (is_full_house(card_groups, card_group_count)) {
-        result = HAND_TYPE_FULL_HOUSE;
-    } else if (is_three_of_a_kind(card_groups, card_group_count)) {
-        result = HAND_TYPE_THREE_OF_A_KIND;
-    } else if (is_two_pair(card_groups, card_group_count)) {
-        result = HAND_TYPE_TWO_PAIR;
-    } else if (is_one_pair(card_groups, card_group_count)) {
-        result = HAND_TYPE_ONE_PAIR;
-    } else {
-        result = HAND_TYPE_HIGH_CARD;
+    while (hand_stack.depth) {
+        Hand popped = pop_hand(&hand_stack);
+
+        int joker_index = index_of(popped.cards, 'J');
+        if (joker_index != -1) {
+            for (int i = 0; i < array_count(card_labels); i++) {
+                popped.cards[joker_index] = card_labels[i];
+                push_hand(&hand_stack, popped);
+            }
+        } else {
+            int card_group_count = 0;
+            Card_Group card_groups[5];
+            group_by_card_label(&popped, card_groups, &card_group_count);
+
+            Hand_Type hand_type;
+            if (is_five_of_a_kind(card_groups, card_group_count)) {
+                hand_type = HAND_TYPE_FIVE_OF_A_KIND;
+            } else if (is_four_of_a_kind(card_groups, card_group_count)) {
+                hand_type = HAND_TYPE_FOUR_OF_A_KIND;
+            } else if (is_full_house(card_groups, card_group_count)) {
+                hand_type = HAND_TYPE_FULL_HOUSE;
+            } else if (is_three_of_a_kind(card_groups, card_group_count)) {
+                hand_type = HAND_TYPE_THREE_OF_A_KIND;
+            } else if (is_two_pair(card_groups, card_group_count)) {
+                hand_type = HAND_TYPE_TWO_PAIR;
+            } else if (is_one_pair(card_groups, card_group_count)) {
+                hand_type = HAND_TYPE_ONE_PAIR;
+            } else {
+                hand_type = HAND_TYPE_HIGH_CARD;
+            }
+
+            if (hand_type > best_type) {
+                best_type = hand_type;
+            }
+        }
     }
 
-    return result;
+    return best_type;
 }
 
 static int get_card_strength(char c) {
@@ -214,12 +278,12 @@ static int get_card_strength(char c) {
             result = 12;
             break;
 
-        case 'J':
-            result = 11;
-            break;
-
         case 'T':
             result = 10;
+            break;
+
+        case 'J':
+            result = 1;
             break;
 
         default:
@@ -228,6 +292,7 @@ static int get_card_strength(char c) {
     }
 
     assert(1 <= result && result <= 14);
+    assert(result != 11);
 
     return result;
 }
