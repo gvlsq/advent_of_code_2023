@@ -62,6 +62,7 @@ static void eat_eol(Stream *stream) {
 static void preprocess_input(char *input) {
     Stream stream;
     stream.at = input;
+    
     int chars_read;
 
     int tmp0[4];
