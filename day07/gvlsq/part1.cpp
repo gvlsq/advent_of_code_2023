@@ -124,7 +124,6 @@ static void group_by_card_label(Hand *hand, Card_Group *groups, int *group_count
 
             if (b->count > a->count) {
                 Card_Group swap = *a;
-
                 *a = *b;
                 *b = swap;
 
