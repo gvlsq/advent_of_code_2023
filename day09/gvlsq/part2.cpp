@@ -96,6 +96,17 @@ static inline bool is_all_zeros(History history) {
     return true;
 }
 
+static void insert(History *history, int index, int value) {
+    assert(history->count < array_count(history->values));
+    for (int i = history->count - 1; i >= index; i--) {
+        int swap = history->values[i];
+        history->values[i] = history->values[i + 1];
+        history->values[i + 1] = swap;
+    }
+
+    history->values[index] = value;
+}
+
 static int get_next_value_for_history(History *history) {
     clear_histories();
 
@@ -119,25 +130,23 @@ static int get_next_value_for_history(History *history) {
 
     // Filling out the "zero" history at the top of the stack
     History *zero_history = &history_stack.histories[history_stack.depth - 1];
-    assert(zero_history->count < array_count(zero_history->values));
-    zero_history->values[zero_history->count++] = 0;
+    insert(zero_history, 0, 0);
 
     // Computing new ending values for other histories
     for (int i = history_stack.depth - 2; i >= 0; i--) {
         History *current_history = &history_stack.histories[i];
         History *prior_history = &history_stack.histories[i + 1];
 
-        int a = current_history->values[current_history->count - 1];
-        int b = prior_history->values[prior_history->count - 1];
+        int a = current_history->values[0];
+        int b = prior_history->values[0];
 
-        assert(current_history->count < array_count(current_history->values));
-        current_history->values[current_history->count++] = a + b;
+        insert(current_history, 0, a - b);
     }
 
     //
     History *first_history = &history_stack.histories[0];
 
-    return first_history->values[first_history->count - 1];
+    return first_history->values[0];
 }
 
 int main(int argc, char **argv) {
