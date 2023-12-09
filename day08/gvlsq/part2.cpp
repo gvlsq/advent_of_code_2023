@@ -158,21 +158,18 @@ int main(int argc, char **argv) {
 
     preprocess_input(input);
 
-    // Determine starting nodes
+    // Initialize starting nodes
     for (int i = 0; i < node_count; i++) {
         Node *node = &nodes[i];
         if (node->name[2] == 'A') {
+            node->steps_to_z = count_steps_to_z(node);
+            
             assert(starting_node_count < array_count(starting_nodes));
             starting_nodes[starting_node_count++] = node;
         }
     }
 
-    // Find LCM of steps-to-**Z across all starters
-    for (int i = 0; i < starting_node_count; i++) {
-        Node *starting_node = starting_nodes[i];
-        starting_node->steps_to_z = count_steps_to_z(starting_node);
-    }
-
+    // Find LCM of steps-to-**Z for all starting nodes
     u64 total = starting_nodes[0]->steps_to_z;
     for (int i = 1; i < starting_node_count; i++) {
         total = lcm(total, (u64)starting_nodes[i]->steps_to_z);
