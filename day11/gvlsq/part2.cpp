@@ -128,7 +128,7 @@ static void preprocess_input(char *input) {
         if (!found_galaxy) {
             for (int i = 0; i < galaxy_count; i++) {
                 Galaxy *galaxy = &galaxies[i];
-                if (galaxy->position.y >(y + yshift)) {
+                if (galaxy->position.y > (y + yshift)) {
                     galaxy->position.y += EXPANSION_INCREMENT;
                 }
             }
@@ -153,7 +153,7 @@ static void preprocess_input(char *input) {
         if (!found_galaxy) {
             for (int i = 0; i < galaxy_count; i++) {
                 Galaxy *galaxy = &galaxies[i];
-                if (galaxy->position.x >(x + xshift)) {
+                if (galaxy->position.x > (x + xshift)) {
                     galaxy->position.x += EXPANSION_INCREMENT;
                 }
             }
