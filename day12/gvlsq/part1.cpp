@@ -165,16 +165,16 @@ int main(int argc, char **argv) {
                 continue;
             }
 
-            for (int i = 0; i < string_length(popped.text); i++) {
-                if (popped.text[i] == '?') {
+            for (int j = 0; j < string_length(popped.text); j++) {
+                if (popped.text[j] == '?') {
                     Record_Line tmp0; // ? => #
                     memcpy(&tmp0, &popped, sizeof(popped));
 
                     Record_Line tmp1; // ? => .
                     memcpy(&tmp1, &popped, sizeof(popped));
 
-                    tmp0.text[i] = '#';
-                    tmp1.text[i] = '.';
+                    tmp0.text[j] = '#';
+                    tmp1.text[j] = '.';
 
                     push_line(tmp0);
                     push_line(tmp1);
